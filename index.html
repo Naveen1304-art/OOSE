@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Personal Finance Tracker</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:'Segoe UI',sans-serif;background:#0a0f1e;color:#e2e8f0;min-height:100vh;}
+    nav{background:#111827;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #1f2937;position:sticky;top:0;z-index:100;}
+    .logo{font-size:1.3rem;font-weight:800;color:#10b981;}
+    .logo span{color:#fff;}
+    .nav-links{display:flex;gap:8px;align-items:center;}
+    .nav-links button{background:transparent;border:1px solid #374151;color:#9ca3af;padding:7px 16px;border-radius:8px;cursor:pointer;font-size:0.85rem;transition:all .2s;}
+    .nav-links button:hover,.nav-links button.active{background:#10b981;border-color:#10b981;color:#000;font-weight:700;}
+    #logoutBtn{display:none;background:#ef4444!important;border-color:#ef4444!important;color:#fff!important;}
+    #userGreet{color:#6b7280;font-size:0.85rem;}
+    .page{display:none;padding:32px 20px;max-width:780px;margin:0 auto;}
+    .page.active{display:block;}
+    .card{background:#111827;border:1px solid #1f2937;border-radius:16px;padding:32px;box-shadow:0 8px 32px rgba(0,0,0,.4);margin-bottom:20px;}
+    .card h2{font-size:1.5rem;font-weight:700;color:#f9fafb;margin-bottom:4px;}
+    .card .sub{color:#6b7280;font-size:0.9rem;margin-bottom:24px;}
+    .fg{margin-bottom:16px;}
+    label{display:block;font-size:0.82rem;color:#6b7280;margin-bottom:5px;font-weight:500;}
+    input,select,textarea{width:100%;background:#0a0f1e;border:1px solid #1f2937;color:#e2e8f0;padding:10px 13px;border-radius:8px;font-size:0.92rem;outline:none;transition:border .2s;}
+    input:focus,select:focus{border-color:#10b981;}
+    select option{background:#111827;}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .btn{width:100%;padding:12px;background:#10b981;color:#000;border:none;border-radius:8px;font-size:0.97rem;font-weight:700;cursor:pointer;margin-top:6px;transition:background .2s;}
+    .btn:hover{background:#059669;}
+    
+    /* Google Button Styling */
+    .btn-google {background: #fff; color: #444; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 20px;}
+    .btn-google:hover {background: #f1f1f1;}
+    .btn-google img {width: 20px;}
+
+    .alert{padding:11px 15px;border-radius:8px;margin-bottom:16px;font-size:0.88rem;display:none;}
+    .alert.ok{background:#052e16;color:#86efac;border:1px solid #166534;}
+    .alert.err{background:#450a0a;color:#fca5a5;border:1px solid #7f1d1d;}
+    .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px;}
+    .stat-card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:20px;text-align:center;}
+    .stat-card .amt{font-size:1.6rem;font-weight:800;margin-bottom:4px;}
+    .stat-card .lbl{font-size:0.78rem;color:#6b7280;text-transform:uppercase;letter-spacing:1px;}
+    .income-clr{color:#10b981;}
+    .expense-clr{color:#ef4444;}
+    .balance-clr{color:#3b82f6;}
+    .section-title{font-size:1rem;font-weight:700;color:#f9fafb;margin-bottom:12px;}
+    .tx-list{display:flex;flex-direction:column;gap:8px;}
+    .tx-item{background:#0a0f1e;border:1px solid #1f2937;border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;}
+    .tx-left .tx-title{font-size:0.95rem;font-weight:600;color:#f1f5f9;}
+    .tx-left .tx-meta{font-size:0.78rem;color:#6b7280;margin-top:2px;}
+    .tx-amt{font-size:1.1rem;font-weight:700;}
+    .tx-amt.inc{color:#10b981;}
+    .tx-amt.exp{color:#ef4444;}
+    .no-data{color:#374151;text-align:center;padding:32px;font-size:0.9rem;}
+    .budget-row{margin-bottom:16px;}
+    .budget-label{display:flex;justify-content:space-between;font-size:0.85rem;color:#9ca3af;margin-bottom:6px;}
+    .bar-bg{background:#1f2937;border-radius:999px;height:10px;overflow:hidden;}
+    .bar-fill{height:100%;border-radius:999px;background:#10b981;transition:width .5s;}
+    .bar-fill.warn{background:#f59e0b;}
+    .bar-fill.danger{background:#ef4444;}
+    .hero{text-align:center;padding:50px 20px 32px;}
+    .hero h1{font-size:2.2rem;font-weight:800;color:#f9fafb;margin-bottom:10px;}
+    .hero p{color:#6b7280;font-size:1rem;max-width:460px;margin:0 auto 28px;}
+    .hero-btns{display:flex;gap:12px;justify-content:center;}
+    .btn-o{padding:11px 26px;border:2px solid #10b981;background:transparent;color:#10b981;border-radius:8px;font-size:0.97rem;font-weight:600;cursor:pointer;transition:all .2s;}
+    .btn-o:hover{background:#10b981;color:#000;}
+    .btn-f{padding:11px 26px;background:#10b981;border:2px solid #10b981;color:#000;border-radius:8px;font-size:0.97rem;font-weight:700;cursor:pointer;transition:all .2s;}
+    .btn-f:hover{background:#059669;}
+    @media(max-width:600px){.stats{grid-template-columns:1fr;}.row2{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">💰 Finance<span>Track</span></div>
+  <div class="nav-links">
+    <span id="userGreet"></span>
+    <button onclick="go('home')" id="n-home" class="active">Home</button>
+    <button onclick="go('auth')" id="n-auth">Sign In</button>
+    <button onclick="go('dashboard')" id="n-dash" style="display:none">Dashboard</button>
+    <button onclick="go('income')" id="n-inc" style="display:none">+ Income</button>
+    <button onclick="go('expense')" id="n-exp" style="display:none">+ Expense</button>
+    <button onclick="go('budget')" id="n-bud" style="display:none">Budget</button>
+    <button id="logoutBtn" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div id="homePage" class="page active">
+  <div class="hero">
+    <h1>Track Your Money 💸</h1>
+    <p>Log income, track expenses, set budgets — all saved securely to your account.</p>
+    <div class="hero-btns">
+      <button class="btn-o" onclick="go('auth')">Get Started</button>
+      <button class="btn-f" onclick="go('dashboard')">View Dashboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ AUTH PAGE (Updated for Google Login) ══════════ -->
+<div id="authPage" class="page">
+  <div class="card" style="text-align: center; max-width: 400px; margin: 0 auto;">
+    <h2>Welcome Back 👋</h2>
+    <p class="sub">Sign in securely with your Google account</p>
+    
+    <div id="authAlert" class="alert"></div>
+
+    <button class="btn btn-google" onclick="signInWithGoogle()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo">
+      Sign in with Google
+    </button>
+  </div>
+</div>
+
+<div id="dashboardPage" class="page">
+  <div class="card">
+    <h2>My Dashboard 📊</h2>
+    <p class="sub">Your financial summary at a glance</p>
+    <div class="stats">
+      <div class="stat-card"><div class="amt income-clr" id="d_income">₹0</div><div class="lbl">Total Income</div></div>
+      <div class="stat-card"><div class="amt expense-clr" id="d_expense">₹0</div><div class="lbl">Total Expense</div></div>
+      <div class="stat-card"><div class="amt balance-clr" id="d_balance">₹0</div><div class="lbl">Balance</div></div>
+    </div>
+    <div class="section-title">📥 Recent Income</div>
+    <div class="tx-list" id="incomeList"><div class="no-data">No income records yet.</div></div>
+    <br/>
+    <div class="section-title">📤 Recent Expenses</div>
+    <div class="tx-list" id="expenseList"><div class="no-data">No expense records yet.</div></div>
+  </div>
+</div>
+
+<div id="incomePage" class="page">
+  <div class="card">
+    <h2>Add Income 📥</h2>
+    <p class="sub">Log your earnings — salary, freelance, gifts, etc.</p>
+    <div id="incAlert" class="alert"></div>
+    <div class="row2">
+      <div class="fg">
+        <label>Income Source</label>
+        <select id="i_source">
+          <option value="">Select Source</option>
+          <option value="Salary">Salary</option>
+          <option value="Freelance">Freelance</option>
+          <option value="Business">Business</option>
+          <option value="Investment">Investment</option>
+          <option value="Gift">Gift</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Amount (₹)</label><input id="i_amount" type="number" placeholder="e.g. 15000" min="0"/></div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>Date</label><input id="i_date" type="date"/></div>
+      <div class="fg"><label>Note (Optional)</label><input id="i_note" type="text" placeholder="e.g. April salary"/></div>
+    </div>
+    <button class="btn" onclick="addIncome()">Save Income</button>
+  </div>
+</div>
+
+<div id="expensePage" class="page">
+  <div class="card">
+    <h2>Add Expense 📤</h2>
+    <p class="sub">Track where your money is going</p>
+    <div id="expAlert" class="alert"></div>
+    <div class="row2">
+      <div class="fg">
+        <label>Category</label>
+        <select id="e_cat">
+          <option value="">Select Category</option>
+          <option value="Food">🍔 Food</option>
+          <option value="Transport">🚗 Transport</option>
+          <option value="Education">📚 Education</option>
+          <option value="Entertainment">🎬 Entertainment</option>
+          <option value="Shopping">🛍️ Shopping</option>
+          <option value="Health">💊 Health</option>
+          <option value="Rent">🏠 Rent</option>
+          <option value="Other">📦 Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Amount (₹)</label><input id="e_amount" type="number" placeholder="e.g. 500" min="0"/></div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>Date</label><input id="e_date" type="date"/></div>
+      <div class="fg"><label>Description (Optional)</label><input id="e_desc" type="text" placeholder="e.g. Lunch with friends"/></div>
+    </div>
+    <button class="btn" onclick="addExpense()">Save Expense</button>
+  </div>
+</div>
+
+<div id="budgetPage" class="page">
+  <div class="card">
+    <h2>Set Monthly Budget 🎯</h2>
+    <p class="sub">Plan how much to spend in each category this month</p>
+    <div id="budAlert" class="alert"></div>
+    <div class="row2">
+      <div class="fg"><label>Month</label><input id="b_month" type="month"/></div>
+      <div class="fg"><label>Total Monthly Budget (₹)</label><input id="b_total" type="number" placeholder="e.g. 20000" min="0"/></div>
+    </div>
+    <p style="font-size:0.85rem;color:#6b7280;margin-bottom:16px">Category-wise limits (optional):</p>
+    <div class="row2">
+      <div class="fg"><label>🍔 Food (₹)</label><input id="b_food" type="number" placeholder="e.g. 5000" min="0"/></div>
+      <div class="fg"><label>🚗 Transport (₹)</label><input id="b_trans" type="number" placeholder="e.g. 2000" min="0"/></div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>📚 Education (₹)</label><input id="b_edu" type="number" placeholder="e.g. 3000" min="0"/></div>
+      <div class="fg"><label>🎬 Entertainment (₹)</label><input id="b_ent" type="number" placeholder="e.g. 2000" min="0"/></div>
+    </div>
+    <div class="fg"><label>📦 Other (₹)</label><input id="b_other" type="number" placeholder="e.g. 3000" min="0"/></div>
+    <button class="btn" onclick="saveBudget()">Save Budget</button>
+  </div>
+  <div class="card" id="budgetProgress" style="display:none">
+    <h2>Budget Progress</h2>
+    <p class="sub">How much you've spent vs your budget</p>
+    <div id="budgetBars"></div>
+  </div>
+</div>
+
+<!-- ══════════ FIREBASE WEB SDK & JAVASCRIPT ══════════ -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+  // Import GoogleAuthProvider and signInWithPopup
+  import { 
+    getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged 
+  } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+  import { 
+    getFirestore, collection, addDoc, getDocs, query, where, doc, setDoc 
+  } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js";
+
+  // Your personal Firebase Configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyA7E_NfQG3oKDNt4tXUij0Fc63OYEA0qNU",
+    authDomain: "oose-8d3d4.firebaseapp.com",
+    projectId: "oose-8d3d4",
+    storageBucket: "oose-8d3d4.firebasestorage.app",
+    messagingSenderId: "92085626945",
+    appId: "1:92085626945:web:ba897838f7c276cb7efec0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  
+  // Set up the Google Provider
+  const provider = new GoogleAuthProvider();
+
+  let currentUser = null;
+  let userName = localStorage.getItem('ft_user') || "User";
+
+  // Attach global functions
+  window.go = go;
+  window.signInWithGoogle = signInWithGoogle;
+  window.logout = logOutUser;
+  window.addIncome = addIncome;
+  window.addExpense = addExpense;
+  window.saveBudget = saveBudget;
+
+  window.onload = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const monthNow = today.slice(0,7);
+    ['i_date','e_date'].forEach(id => { const el=document.getElementById(id); if(el) el.value=today; });
+    const bm = document.getElementById('b_month'); if(bm) bm.value = monthNow;
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      currentUser = user;
+      userName = user.displayName || "User";
+      localStorage.setItem('ft_user', userName);
+      setLoggedIn();
+      if(document.getElementById('dashboardPage').classList.contains('active')) loadDashboard();
+    } else {
+      currentUser = null;
+      setLoggedOut();
+    }
+  });
+
+  function go(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-links button:not(#logoutBtn)').forEach(b => b.classList.remove('active'));
+    document.getElementById(page+'Page').classList.add('active');
+    const nb = document.getElementById('n-'+page.slice(0,3)) ||
+               document.getElementById('n-'+{income:'inc',expense:'exp',budget:'bud',dashboard:'dash',auth:'auth',home:'home'}[page]);
+    if(nb) nb.classList.add('active');
+    
+    if(page==='dashboard' && currentUser) loadDashboard();
+    if(page==='budget' && currentUser) loadBudgetProgress();
+  }
+
+  function showAlert(id, msg, type) {
+    const el = document.getElementById(id);
+    el.textContent = msg; el.className = 'alert ' + type; el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 4000);
+  }
+
+  function setLoggedIn() {
+    ['n-dash','n-inc','n-exp','n-bud','logoutBtn'].forEach(id => document.getElementById(id).style.display='block');
+    document.getElementById('n-auth').style.display = 'none';
+    document.getElementById('userGreet').textContent = '👋 ' + userName;
+  }
+  
+  function setLoggedOut() {
+    ['n-dash','n-inc','n-exp','n-bud','logoutBtn'].forEach(id => document.getElementById(id).style.display='none');
+    document.getElementById('n-auth').style.display = 'block';
+    document.getElementById('userGreet').textContent = '';
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // GOOGLE LOGIN FUNCTION
+  // ══════════════════════════════════════════════════════════════════════
+  async function signInWithGoogle() {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Save or update user info in Firestore securely
+      await setDoc(doc(db, "users", user.uid), {
+        name: user.displayName,
+        email: user.email,
+        last_login: new Date().toISOString()
+      }, { merge: true });
+
+      userName = user.displayName;
+      localStorage.setItem('ft_user', userName);
+      
+      showAlert('authAlert', '✅ Logged in successfully!', 'ok');
+      setTimeout(() => go('dashboard'), 1000);
+    } catch (error) {
+      showAlert('authAlert', '❌ ' + error.message, 'err');
+    }
+  }
+
+  function logOutUser() {
+    signOut(auth).then(() => {
+      localStorage.removeItem('ft_user');
+      go('home');
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // DATA ENTRY (Direct to Firestore)
+  // ══════════════════════════════════════════════════════════════════════
+  async function addIncome() {
+    if(!currentUser) return showAlert('incAlert','❌ Please login first!','err');
+    const source = document.getElementById('i_source').value;
+    const amount = document.getElementById('i_amount').value;
+    
+    if(!source || !amount) return showAlert('incAlert','❌ Source and Amount required!','err');
+    
+    try {
+      await addDoc(collection(db, "income"), {
+        user_email: currentUser.email, // Using Google Email as the unique identifier for data
+        source: source,
+        amount: parseFloat(amount),
+        date: document.getElementById('i_date').value,
+        note: document.getElementById('i_note').value,
+        created_at: new Date().toISOString()
+      });
+      showAlert('incAlert','✅ Income saved!','ok');
+      document.getElementById('i_source').value=''; document.getElementById('i_amount').value=''; document.getElementById('i_note').value='';
+    } catch(e) { showAlert('incAlert','❌ Error saving data','err'); }
+  }
+
+  async function addExpense() {
+    if(!currentUser) return showAlert('expAlert','❌ Please login first!','err');
+    const cat = document.getElementById('e_cat').value;
+    const amount = document.getElementById('e_amount').value;
+    
+    if(!cat || !amount) return showAlert('expAlert','❌ Category and Amount required!','err');
+    
+    try {
+      await addDoc(collection(db, "expenses"), {
+        user_email: currentUser.email,
+        category: cat,
+        amount: parseFloat(amount),
+        date: document.getElementById('e_date').value,
+        description: document.getElementById('e_desc').value,
+        created_at: new Date().toISOString()
+      });
+      showAlert('expAlert','✅ Expense saved!','ok');
+      document.getElementById('e_cat').value=''; document.getElementById('e_amount').value=''; document.getElementById('e_desc').value='';
+    } catch(e) { showAlert('expAlert','❌ Error saving data','err'); }
+  }
+
+  async function saveBudget() {
+    if(!currentUser) return showAlert('budAlert','❌ Please login first!','err');
+    const month = document.getElementById('b_month').value;
+    const total = document.getElementById('b_total').value;
+    
+    if(!month || !total) return showAlert('budAlert','❌ Month and Total required!','err');
+    
+    try {
+      const docId = `${currentUser.email}_${month}`;
+      await setDoc(doc(db, "budgets", docId), {
+        user_email: currentUser.email,
+        month: month,
+        total_budget: parseFloat(total),
+        food: parseFloat(document.getElementById('b_food').value || 0),
+        transport: parseFloat(document.getElementById('b_trans').value || 0),
+        education: parseFloat(document.getElementById('b_edu').value || 0),
+        entertainment: parseFloat(document.getElementById('b_ent').value || 0),
+        other: parseFloat(document.getElementById('b_other').value || 0),
+        updated_at: new Date().toISOString()
+      }, { merge: true });
+      
+      showAlert('budAlert','✅ Budget saved!','ok');
+      loadBudgetProgress();
+    } catch(e) { showAlert('budAlert','❌ Error saving budget','err'); }
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  // DASHBOARD & SUMMARY FETCHING
+  // ══════════════════════════════════════════════════════════════════════
+  async function loadDashboard() {
+    if(!currentUser) return;
+    try {
+      // Fetch Income
+      const qInc = query(collection(db, "income"), where("user_email", "==", currentUser.email));
+      const incDocs = await getDocs(qInc);
+      let incomes = [];
+      incDocs.forEach(d => incomes.push(d.data()));
+      incomes.sort((a,b) => b.created_at.localeCompare(a.created_at));
+
+      // Fetch Expenses
+      const qExp = query(collection(db, "expenses"), where("user_email", "==", currentUser.email));
+      const expDocs = await getDocs(qExp);
+      let expenses = [];
+      expDocs.forEach(d => expenses.push(d.data()));
+      expenses.sort((a,b) => b.created_at.localeCompare(a.created_at));
+
+      // Calculate totals
+      let total_income = incomes.reduce((sum, i) => sum + i.amount, 0);
+      let total_expense = expenses.reduce((sum, e) => sum + e.amount, 0);
+      let balance = total_income - total_expense;
+
+      // Update UI
+      document.getElementById('d_income').textContent  = '₹' + total_income.toFixed(2);
+      document.getElementById('d_expense').textContent = '₹' + total_expense.toFixed(2);
+      const bal = document.getElementById('d_balance');
+      bal.textContent = '₹' + balance.toFixed(2);
+      bal.className   = 'amt ' + (balance >= 0 ? 'balance-clr' : 'expense-clr');
+
+      // Populate Lists
+      const iList = document.getElementById('incomeList');
+      iList.innerHTML = incomes.length ? incomes.slice(0,5).map(i=>`
+        <div class="tx-item">
+          <div class="tx-left"><div class="tx-title">${i.source}</div><div class="tx-meta">${i.date||''} ${i.note?'· '+i.note:''}</div></div>
+          <div class="tx-amt inc">+₹${i.amount.toFixed(2)}</div>
+        </div>`).join('') : '<div class="no-data">No income records yet.</div>';
+
+      const eList = document.getElementById('expenseList');
+      eList.innerHTML = expenses.length ? expenses.slice(0,5).map(e=>`
+        <div class="tx-item">
+          <div class="tx-left"><div class="tx-title">${e.category}</div><div class="tx-meta">${e.date||''} ${e.description?'· '+e.description:''}</div></div>
+          <div class="tx-amt exp">-₹${e.amount.toFixed(2)}</div>
+        </div>`).join('') : '<div class="no-data">No expense records yet.</div>';
+
+    } catch(err) { console.error("Dashboard Load Error:", err); }
+  }
+
+  async function loadBudgetProgress() {
+    if(!currentUser) return;
+    try {
+      const month = document.getElementById('b_month').value;
+      
+      // Fetch specific month's budget
+      const docId = `${currentUser.email}_${month}`;
+      const qBud = query(collection(db, "budgets"), where("user_email", "==", currentUser.email), where("month", "==", month));
+      const budSnap = await getDocs(qBud);
+      
+      if(budSnap.empty) {
+        document.getElementById('budgetBars').innerHTML = '<div class="no-data">Set category budgets above to see progress.</div>';
+        document.getElementById('budgetProgress').style.display = 'block';
+        return;
+      }
+      
+      const budget = budSnap.docs[0].data();
+
+      // Fetch all expenses to calculate spending
+      const qExp = query(collection(db, "expenses"), where("user_email", "==", currentUser.email));
+      const expDocs = await getDocs(qExp);
+      const catSpent = {};
+      
+      expDocs.forEach(d => {
+        const e = d.data();
+        if(e.date && e.date.startsWith(month)) {
+          catSpent[e.category] = (catSpent[e.category]||0) + e.amount;
+        }
+      });
+
+      const cats = [
+        {key:'food',label:'🍔 Food'}, {key:'transport',label:'🚗 Transport'},
+        {key:'education',label:'📚 Education'}, {key:'entertainment',label:'🎬 Entertainment'},
+        {key:'other',label:'📦 Other'}
+      ];
+
+      let html = '';
+      cats.forEach(c=>{
+        const limit = budget[c.key]||0;
+        if(!limit) return;
+        const spent = catSpent[c.key]||0;
+        const pct   = Math.min((spent/limit)*100,100).toFixed(0);
+        const cls   = pct>=100?'danger':pct>=75?'warn':'';
+        html += `<div class="budget-row">
+          <div class="budget-label"><span>${c.label}</span><span>₹${spent.toFixed(0)} / ₹${limit}</span></div>
+          <div class="bar-bg"><div class="bar-fill ${cls}" style="width:${pct}%"></div></div>
+        </div>`;
+      });
+
+      document.getElementById('budgetBars').innerHTML = html || '<div class="no-data">Set category budgets above to see progress.</div>';
+      document.getElementById('budgetProgress').style.display = 'block';
+    } catch(err) { console.error("Budget Progress Error:", err); }
+  }
+</script>
+</body>
+</html>
